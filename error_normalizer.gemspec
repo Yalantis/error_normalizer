@@ -8,7 +8,7 @@ Gem::Specification.new do |spec|
   spec.authors       = ['Denis Kondratenko']
   spec.email         = ['di.kondratenko@gmail.com']
 
-  spec.summary       = 'Normalize dry-validation and ActiveModel errors to universal format'
+  spec.summary       = 'Normalize dry-validation and ActiveModel errors to the universal format'
   spec.homepage      = 'https://gitlab.yalantis.com/web/error_normalizer'
   spec.license       = 'MIT'
 
@@ -19,7 +19,10 @@ Gem::Specification.new do |spec|
   end
   spec.require_paths = ['lib']
 
+  spec.add_runtime_dependency 'dry-configurable', '~> 0.7.0'
+
   spec.add_development_dependency 'bundler', '~> 1.16'
+  spec.add_development_dependency 'dry-validation', '~> 0.12.2'
   spec.add_development_dependency 'rake', '~> 10.0'
   spec.add_development_dependency 'rspec', '~> 3.0'
   spec.add_development_dependency 'rubocop', '0.59.2'

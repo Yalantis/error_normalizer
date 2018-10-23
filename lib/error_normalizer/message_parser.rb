@@ -8,6 +8,10 @@ class ErrorNormalizer
   # In case message isn't recognized we set error to be a simple
   # normalized message (no spaces and special characters).
   #
+  # Here are the links to AM::Errors and Dry::Validation list of error messages:
+  #   - Dry: https://github.com/dry-rb/dry-validation/blob/8417e8/config/errors.yml
+  #   - AM: https://github.com/svenfuchs/rails-i18n/blob/70b38b/rails/locale/en-US.yml#L111
+  #
   class MessageParser
     VALUE_MATCHERS = [
       /\A(?<err>must not include) (?<val>.+)/,
@@ -20,7 +24,6 @@ class ErrorNormalizer
       /\A(?<err>must be less than or equal to) (?<val>\d+)/,
       /\A(?<err>size cannot be greater than) (?<val>\d+)/,
       /\A(?<err>size cannot be less than) (?<val>\d+)/,
-      /\A(?<err>must be) (?<val>\w+)\z/,
       /\A(?<err>size must be) (?<val>\d+)/,
       /\A(?<err>length must be) (?<val>\d+)/
     ].freeze
@@ -34,23 +37,23 @@ class ErrorNormalizer
 
     def initialize(message)
       @message = message
-      @err = nil
+      @key = nil
       @payload = {}
     end
 
     def parse
       parse_value_message
-      return to_a if @err
+      return to_a if @key
 
       parse_list_message
-      return to_a if @err
+      return to_a if @key
 
-      @err = to_error(@message)
+      @key = to_key(@message)
       to_a
     end
 
     def to_a
-      [@err, @message, @payload]
+      [@key, @message, @payload]
     end
 
     private
@@ -60,7 +63,7 @@ class ErrorNormalizer
         data = matcher.match(@message)
         next if data.nil?
 
-        @err = to_error(data[:err])
+        @key = to_key(data[:err])
         @payload[:value] = data[:val]
 
         break
@@ -72,14 +75,14 @@ class ErrorNormalizer
         data = matcher.match(@message)
         next if data.nil?
 
-        @err = to_error(data[:err])
+        @key = to_key(data[:err])
         @payload.merge!(parse_list_payload(data[:val]))
 
         break
       end
     end
 
-    def to_error(msg)
+    def to_key(msg)
       msg.downcase.tr(' ', '_').gsub(/[^a-z0-9_]/, '')
     end
 

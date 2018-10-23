@@ -70,6 +70,74 @@ THEN we can convert given errors to API error format
 
 For more information about supported errors and how they would be parsed please check the spec.
 
+#### Type-inference feature
+
+**TL;DR:** Add `_rule` to the [custom validation block](https://dry-rb.org/gems/dry-validation/custom-validation-blocks/) names (adding this to the [high-level rules](https://dry-rb.org/gems/dry-validation/high-level-rules/) won't harm either, praise the consistency!).
+
+**Long version**: When you're using [custom validation blocks](https://dry-rb.org/gems/dry-validation/custom-validation-blocks/) the error output is slightly diffenet. Instead of attribute name it will have a rule name as a key. For example, GIVEN this schema
+
+    schema = Dry::Validation.Schema do
+      configure do
+        def self.messages
+          super.merge(en: { errors: { email_required: 'provide email' } })
+        end
+      end
+
+      required(:email).maybe(:str?)
+      required(:newsletter).value(:bool?)
+
+      validate(email_required: %i[newsletter email]) do |newsletter, email|
+        if newsletter == true
+          !email.nil?
+        else
+          true
+        end
+      end
+    end
+
+AND the following input
+
+    errors = schema.call(newsletter: true, email: nil).errors
+    # { email_required: ['provide email'] }
+
+THEN we will get following format after normalization
+
+    ErrorNormalizer.normalie(errors)
+    # [{
+    #   key: 'provide_email',
+    #   message: 'provide email',
+    #   payload: { path: 'email_required' }, # should be empty to not confuse ppl
+    #   type: 'params' # should be "rule" or "custom" but definately not "params"
+    # }]
+
+The solution to this problem would be to use _type inference from the rule name_ feature. Just add a `_rule` to the name of a custom block validation, like this
+
+    validate(email_required_rule: %i[newsletter email]) do |newsletter, email|
+      false
+    end
+
+Now validation will produce errors like this
+
+    { email_required_rule: ['provide email'] }
+
+But we can easily spot keys which end with `_rule` and normalize such erros appropiately to the following format
+
+    ErrorNormalizer.normalize(email_required_rule: ['provide email'])
+    # [{
+    #   key: 'provide_email',
+    #   message: 'provide email',
+    #   payload: {},
+    #   type: 'rule'
+    # }]
+
+You can customize rule name match pattern, type name or turn off this feature completely by specifying it in configuration block
+
+    ErrorNormalizer.configure do |config|
+      config.infer_type_from_rule_name = true
+      config.rule_matcher = /_rule\z/
+      config.type_name = 'rule'
+    end
+
 ### ActiveModel::Validations
 
 ActiveModel errors aren't fully supported. By that I mean errors will be converted to the single format, however you won't see really unique error `key` or `payload` with additional info.
@@ -110,8 +178,8 @@ THEN we can normalize object errors to API error format
 
 ## TODO
 
-- support dry-validation [nested data](https://dry-rb.org/gems/dry-validation/nested-data/)
-- support dry-validation [array as input](https://dry-rb.org/gems/dry-validation/array-as-input/)
+- plugin to make full error translation
+- configure Gitlab CI
 - parse ActiveModel error mesasges
 
 ## License
