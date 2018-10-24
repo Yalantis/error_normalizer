@@ -6,27 +6,6 @@ RSpec.describe ErrorNormalizer do
 
     let(:options) { Hash[] }
 
-    context 'with nested hash as an input' do
-      let(:input) { Hash[user: { email: ['invalid email'] }, bokah: ['is missing']] }
-
-      it 'returns normalized errors' do
-        is_expected.to match_array [
-          {
-            key: 'invalid_email',
-            message: 'invalid email',
-            payload: { path: 'user.email' },
-            type: 'params'
-          },
-          {
-            key: 'is_missing',
-            message: 'is missing',
-            payload: { path: 'bokah' },
-            type: 'params'
-          }
-        ]
-      end
-    end
-
     context 'with "namespace" option' do
       let(:input) { Hash[email: ['invalid email']] }
       let(:options) { Hash[namespace: 'user'] }
