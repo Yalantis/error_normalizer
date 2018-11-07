@@ -5,7 +5,7 @@ require 'error_normalizer/version'
 require 'error_normalizer/normalizer'
 
 #
-# Intended to normalize errors to the single format:
+# This class provides high-level API to normalize errors to the single format:
 #
 #     {
 #       key: 'has_already_been_taken',
@@ -15,9 +15,6 @@ require 'error_normalizer/normalizer'
 #         path: 'user.email'
 #       }
 #     }
-#
-# We shall be able to automatically convert dry-validation output to this format
-# and since we're using rails also automatically convert ActiveModel::Errors.
 #
 class ErrorNormalizer
   extend Dry::Configurable

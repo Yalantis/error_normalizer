@@ -1,9 +1,10 @@
 # frozen_string_literal: true
 
 class ErrorNormalizer
+  #
   # Error struct which makes cosmetic normalization
-  # upon calling either #to_hash and #to_json.
-  # Supports case equality check (#===) for hash structs.
+  # upon calling either {Error#to_hash} or {Error#to_json}.
+  # Provides case equality check {Error.===} to support plain Hash structs.
   #
   # @example
   #   Error.new('not_plausible', message: "can't recognize your phone", path: 'user.phone')
@@ -29,14 +30,17 @@ class ErrorNormalizer
       @payload = payload
     end
 
+    # Case equality check
+    # @return [Boolean]
     def self.===(other)
       return true if other.is_a?(Error)
       return false unless other.is_a?(Hash)
 
       h = other.transform_keys(&:to_s)
-      h.key?('key') & h.key?('message') && h.key?('payload') && h.key?('type')
+      h.key?('key') && h.key?('message') && h.key?('payload') && h.key?('type')
     end
 
+    # @return [Hash] error Hash representation
     def to_hash
       {
         key: @key,
@@ -46,6 +50,7 @@ class ErrorNormalizer
       }
     end
 
+    # @return [String] error JSON string representation
     def to_json
       to_hash.to_json
     end

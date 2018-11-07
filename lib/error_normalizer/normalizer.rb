@@ -5,7 +5,7 @@ require_relative 'message_parser'
 
 class ErrorNormalizer
   #
-  # Responsible for converting input to the array of normalized errors.
+  # Convert given input to the array of normalized errors.
   #
   # @example
   #   errors = { phone: ['not plausible'] }
@@ -18,7 +18,7 @@ class ErrorNormalizer
   #   # }]
   #
   class Normalizer
-    UnsupportedInputType = Class.new(StandardError)
+    UnsupportedInputTypeError = Class.new(StandardError)
 
     attr_reader :errors
 
@@ -29,6 +29,9 @@ class ErrorNormalizer
       @config = config
     end
 
+    # Add new error object to the collection of processed errors.
+    # This is a more low-level method which is used by {#normalize}.
+    # @return [Error, Hash]
     def add_error(error, path: nil, **options)
       @errors <<
         case error
@@ -39,11 +42,12 @@ class ErrorNormalizer
         end
     end
 
+    # Primary method to normalize the given input
+    # @return [self]
     def normalize
-      case @input
-      when Hash
+      if @input.is_a?(Hash)
         normalize_hash(@input.dup)
-      when ActiveModel::Errors
+      elsif @input.respond_to?(:to_hash)
         normalize_hash(@input.to_hash)
       else
         raise "Don't know how to normalize errors"
@@ -52,6 +56,7 @@ class ErrorNormalizer
       self
     end
 
+    # @return [Array<Hash>] normalized errors of {Error#to_hash}
     def to_a
       @errors.map(&:to_hash)
     end
@@ -69,7 +74,7 @@ class ErrorNormalizer
           ns = namespaced_path(key)
           Normalizer.new(value, namespace: ns).normalize.errors.each { |e| add_error(e) }
         else
-          raise UnsupportedInputType
+          raise UnsupportedInputTypeError
         end
       end
     end

@@ -8,9 +8,9 @@ class ErrorNormalizer
   # In case message isn't recognized we set error to be a simple
   # normalized message (no spaces and special characters).
   #
-  # Here are the links to AM::Errors and Dry::Validation list of error messages:
-  #   - Dry: https://github.com/dry-rb/dry-validation/blob/8417e8/config/errors.yml
-  #   - AM: https://github.com/svenfuchs/rails-i18n/blob/70b38b/rails/locale/en-US.yml#L111
+  # Here are the links to ActiveModel::Errors and Dry::Validation list of error messages:
+  # - {https://github.com/dry-rb/dry-validation/blob/8417e8/config/errors.yml dry-validation}
+  # - {https://github.com/svenfuchs/rails-i18n/blob/70b38b/rails/locale/en-US.yml#L111 ActiveModel::Errors}
   #
   class MessageParser
     VALUE_MATCHERS = [
@@ -41,6 +41,8 @@ class ErrorNormalizer
       @payload = {}
     end
 
+    # Parse error message
+    # @return (see #to_a)
     def parse
       parse_value_message
       return to_a if @key
@@ -52,6 +54,7 @@ class ErrorNormalizer
       to_a
     end
 
+    # @return [Array] a tuple of parsed [key, message, payload]
     def to_a
       [@key, @message, @payload]
     end
