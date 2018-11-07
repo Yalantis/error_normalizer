@@ -9,7 +9,7 @@ Gem::Specification.new do |spec|
   spec.email         = ['di.kondratenko@gmail.com']
 
   spec.summary       = 'Normalize dry-validation and ActiveModel errors to the universal format'
-  spec.homepage      = 'https://gitlab.yalantis.com/web/error_normalizer'
+  spec.homepage      = 'https://gitlab.yalantis.com/public-repo/error_normalizer/'
   spec.license       = 'MIT'
 
   # Specify which files should be added to the gem when it is released.
