@@ -50,7 +50,7 @@ class ErrorNormalizer
       elsif @input.respond_to?(:to_hash)
         normalize_hash(@input.to_hash)
       else
-        raise "Don't know how to normalize errors"
+        raise UnsupportedInputTypeError
       end
 
       self
