@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'bundler/setup'
+require 'pry-byebug'
 require 'error_normalizer'
 
 RSpec.configure do |config|

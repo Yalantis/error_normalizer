@@ -63,6 +63,7 @@ class ErrorNormalizer
 
     private
 
+    # TODO: support arrays of errors as input
     def normalize_hash(input) # rubocop:disable AbcSize
       return add_error(input) if input.is_a?(Error)
 
@@ -72,7 +73,7 @@ class ErrorNormalizer
           value.each { |msg| add_error(msg, options) }
         elsif value.is_a?(Hash)
           ns = namespaced_path(key)
-          Normalizer.new(value, namespace: ns).normalize.errors.each { |e| add_error(e) }
+          Normalizer.new(value, namespace: ns, **@config).normalize.errors.each { |e| add_error(e) }
         else
           raise UnsupportedInputTypeError
         end
@@ -86,8 +87,8 @@ class ErrorNormalizer
     end
 
     def parse_error(err_message, path, options)
-      result = MessageParser.new(err_message).parse
-      key, msg, payload = result.to_a
+      options[:i18n_messages] = @config[:i18n_messages] if options[:i18n_messages].nil?
+      key, msg, payload = *pick_message_parser.new(err_message).parse
 
       Error.new(key, message: msg, path: namespaced_path(path), **payload, **options)
     end
@@ -110,6 +111,19 @@ class ErrorNormalizer
       end
 
       payload.merge!(type: type)
+    end
+
+    def pick_message_parser # rubocop:disable AbcSize
+      find_by_locale = ->(locale) { ->(parser) { parser.locale == locale } }
+
+      msg_parser = @config[:message_parsers].find(&find_by_locale.(I18n.locale))
+      return msg_parser unless msg_parser.nil?
+
+      warn "No message parser with #{I18n.locale} found, falling back to #{I18n.default_locale}"
+      msg_parser = @config[:message_parsers].find(&find_by_locale.(I18n.default_locale))
+      return msg_parser unless msg_parser.nil?
+
+      raise 'No message parser found' if msg_parser.nil?
     end
   end
 end

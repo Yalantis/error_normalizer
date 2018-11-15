@@ -2,9 +2,14 @@
 
 class ErrorNormalizer
   #
-  # Error struct which makes cosmetic normalization
-  # upon calling either {Error#to_hash} or {Error#to_json}.
-  # Provides case equality check {Error.===} to support plain Hash structs.
+  # Struct which makes cosmetic normalization on calling
+  # either {Error#to_hash} or {Error#to_json}.
+  #
+  # Translates message with path via i18n if
+  # corresponding options is passed (see {Error#initialize}).
+  #
+  # Provides case equality check ({Error.===})
+  # to support plain Hash structs.
   #
   # @example
   #   Error.new('not_plausible', message: "can't recognize your phone", path: 'user.phone')
@@ -23,10 +28,11 @@ class ErrorNormalizer
   #   puts message #=> 'YEP'
   #
   class Error
-    def initialize(error_key, message: nil, type: 'params', **payload)
+    def initialize(error_key, message: nil, type: 'params', i18n_messages: nil, **payload)
       @key = error_key
       @message = message
       @type = type
+      @i18n_messages = i18n_messages
       @payload = payload
     end
 
@@ -40,11 +46,23 @@ class ErrorNormalizer
       h.key?('key') && h.key?('message') && h.key?('payload') && h.key?('type')
     end
 
+    # Translate message with path via i18n.
+    # Delegates path translation to {SchemaPathTranslator}.
+    # @return [String]
+    def full_message
+      return message unless @i18n_messages && @type == 'params'
+
+      path = payload[:path]
+      return if path.nil?
+
+      translate_path(path)
+    end
+
     # @return [Hash] error Hash representation
     def to_hash
       {
         key: @key,
-        message: message,
+        message: full_message,
         payload: payload,
         type: @type
       }
@@ -63,6 +81,13 @@ class ErrorNormalizer
 
     def payload
       @payload.delete_if { |_k, v| v.nil? || v.empty? }
+    end
+
+    def translate_path(path)
+      require 'error_normalizer/schema_path_translator' # do not load if not needed
+
+      path_translation = SchemaPathTranslator.new(path).translate
+      "#{path_translation} #{message}"
     end
   end
 end
