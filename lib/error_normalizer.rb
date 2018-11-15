@@ -3,6 +3,7 @@
 require 'dry-configurable'
 require 'error_normalizer/version'
 require 'error_normalizer/normalizer'
+require 'error_normalizer/message_parser/english'
 
 #
 # This class provides high-level API to normalize errors to the single format:
@@ -22,6 +23,8 @@ class ErrorNormalizer
   setting :infer_type_from_rule_name, true
   setting :rule_matcher, /_rule\z/
   setting :type_name, 'rule'
+  setting :i18n_messages, false
+  setting :message_parsers, [ErrorNormalizer::MessageParser::English]
 
   #
   # Normalize errors to flat array of structured errors.

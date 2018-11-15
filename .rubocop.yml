@@ -20,6 +20,9 @@ Style/FrozenStringLiteralComment:
 Style/ModuleFunction:
   Enabled: false
 
+Style/LambdaCall:
+  Enabled: false
+
 #################### Naming ##########################
 
 Naming/AccessorMethodName:

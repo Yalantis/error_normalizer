@@ -28,6 +28,8 @@ Each error object **must have** 4 required fields: `key`, `type`, `message` and 
 
 ## Usage
 
+[DOCUMENTATION](https://www.rubydoc.info/gems/error_normalizer/)
+
 ### dry-validation
 
 GIVEN following [dry-validation](https://dry-rb.org/gems/dry-validation/) schema
@@ -138,6 +140,70 @@ You can customize rule name match pattern, type name or turn off this feature co
       config.type_name = 'rule'
     end
 
+#### I18n support
+
+##### Full message translation
+
+This feature enables to define localization for schema attributes (think of `path` that you get in `payload`), translate it with I18n and concatenate it with the error messages.
+
+    schema = Dry::Validation.Schema do
+      required(:user).schema do
+        required(:favorite_pet).filled(size?: 3..8)
+        required(:vessel).schema do
+          required(:factory).filled(excluded_from?: ['Bilgewater', 'Shipwreck'])
+        end
+      end
+    end
+
+AND following input
+
+    errors = schema.(user: { favorite_pet: 'Zuckerberg', vessel: { factory: 'Bilgewater' } }).errors
+    #=> {:user=>{:favorite_pet=>["length must be within 3 - 8"], :company=>{:name=>["must not be one of: Bilgewater, Shipwreck"]}}}
+
+AND following translations loaded in `I18n`
+
+    en:
+      schemas:
+        user:
+          '@': cap
+          favorite_pet: parrot
+          vessel:
+            '@': ship
+            factory: dockyard
+
+THEN we can convert it to fully translated errors
+
+    ErrorNormalizer.normalize(errors, i18n_messages: true)
+    # [{
+    #   :key=>"length_must_be_within",
+    #   :message=>"Cap parrot length must be within 3 - 8",
+    #   :payload=>{:path=>"user.favorite_pet", :range=>["3", "15"]},
+    #   :type=>"params"
+    # }, {
+    #   :key=>"must_not_be_one_of",
+    #   :message=>"Cap ship dockyard must not be one of: Bilgewater, Shipwreck",
+    #   :payload=>{:path=>"user.vessel.factory", :list=>["Bilgewater", "Shipwreck"]},
+    #   :type=>"params"
+    # }]
+
+You can configure this behaviour globally:
+
+    ErrorNormalizer.configure do |config|
+      config.i18n_messages = true
+    end
+
+For the i18n lookup rules go check [SchemaPathTranslator documentation](https://www.rubydoc.info/gems/error_normalizer/ErrorNormalizer/SchemaPathTranslator).
+
+##### Non-english error messages
+
+If you want to support error messages for the other languages you'll need to define and register localized message parser. You can register it in configuration block:
+
+    ErrorNormalizer.configure do |config|
+      config.message_parsers << RussianMessageParser
+    end
+
+For message parser implementation please check the [documentation](https://www.rubydoc.info/gems/error_normalizer/ErrorNormalizer/MessageParser) and the source code of `ErrorNormalizer::MessageParser::English`.
+
 ### ActiveModel::Validations
 
 ActiveModel errors aren't fully supported. By that I mean errors will be converted to the single format, however you won't see really unique error `key` or `payload` with additional info.
@@ -178,9 +244,9 @@ THEN we can normalize object errors to API error format
 
 ## TODO
 
-- plugin to make full error translation
 - configure Gitlab CI
 - parse ActiveModel error mesasges
+- support array of errors as an input
 
 ## License
 

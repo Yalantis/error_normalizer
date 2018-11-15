@@ -2,7 +2,20 @@
 
 class ErrorNormalizer
   #
-  # Parse error messages and extract payload metadata.
+  # Base implementation of the error message parser.
+  # Message parsers attempt to extract key, message and payload from the given message.
+  # Instances of {MessageParser} can't parse errors on its own because it does not define
+  # any error matchers but it defines all necessary parse logic
+  # since it doesn't depend on the locale.
+  #
+  # You can easily define your own parser by inheriting from {MessageParser}:
+  #
+  #   class RussianMessageParser < ErrorNormalizer::MessageParser
+  #     locale :ru
+  #
+  #     value_matcher :must_be_equal_to, /(?<err>должен быть равным) (?<val>.+)/u
+  #     list_matcher :must_be_on_of, /\A(?<err>должен быть одним из): (?<val>.+)/u
+  #   end
   #
   # ActiveModel ignored for now because we don't plan to use its validations.
   # In case message isn't recognized we set error to be a simple
@@ -13,33 +26,65 @@ class ErrorNormalizer
   # - {https://github.com/svenfuchs/rails-i18n/blob/70b38b/rails/locale/en-US.yml#L111 ActiveModel::Errors}
   #
   class MessageParser
-    VALUE_MATCHERS = [
-      /\A(?<err>must not include) (?<val>.+)/,
-      /\A(?<err>must be equal to) (?<val>.+)/,
-      /\A(?<err>must not be equal to) (?<val>.+)/,
-      /\A(?<err>must be greater than) (?<val>\d+)/,
-      /\A(?<err>must be greater than or equal to) (?<val>\d+)/,
-      /\A(?<err>must include) (?<val>.+)/,
-      /\A(?<err>must be less than) (?<val>\d+)/,
-      /\A(?<err>must be less than or equal to) (?<val>\d+)/,
-      /\A(?<err>size cannot be greater than) (?<val>\d+)/,
-      /\A(?<err>size cannot be less than) (?<val>\d+)/,
-      /\A(?<err>size must be) (?<val>\d+)/,
-      /\A(?<err>length must be) (?<val>\d+)/
-    ].freeze
+    AlreadyDefinedError = Class.new(StandardError)
 
-    LIST_MATCHERS = [
-      /\A(?<err>must not be one of): (?<val>.+)/,
-      /\A(?<err>must be one of): (?<val>.+)/,
-      /\A(?<err>size must be within) (?<val>.+)/,
-      /\A(?<err>length must be within) (?<val>.+)/
-    ].freeze
+    class << self
+      # Get or set parser locale
+      # @return [Symbol]
+      def locale(i18n_locale = nil)
+        return @locale if i18n_locale.nil?
+
+        @locale = i18n_locale.intern
+      end
+
+      # Define message value matcher with a corresponding error key.
+      # Value matchers add a "value" property to the error payload.
+      # @param key [Symbol] set the error key for a given matcher
+      # @param matcher [Regexp] match and extract error and payload via regexp named groups
+      # @return [void]
+      def value_matcher(key, matcher)
+        raise ArgumentError, 'matcher should be a Regexp' unless matcher.is_a?(Regexp)
+
+        key = key.to_s
+        @value_matchers ||= {}
+
+        raise AlreadyDefinedError if @value_matchers.key?(key)
+
+        @value_matchers[key] = matcher
+      end
+
+      # Define message list matcher with a corresponding error key.
+      # List matchers add a "list" or "range" property to the error payload.
+      # @param key [Symbol] set the error key for a given matcher
+      # @param matcher [Regexp] match and extract error and payload via regexp named groups
+      # @return [void]
+      def list_matcher(key, matcher)
+        raise ArgumentError, 'matcher should be a Regexp' unless matcher.is_a?(Regexp)
+
+        key = key.to_s
+        @list_matchers ||= {}
+
+        raise AlreadyDefinedError if @list_matchers.key?(key)
+
+        @list_matchers[key] = matcher
+      end
+
+      # @return [Hash] value matchers
+      attr_reader :value_matchers
+
+      # @return [Hash] list matchers
+      attr_reader :list_matchers
+    end
 
     def initialize(message)
+      @locale = self.class.locale
       @message = message
       @key = nil
       @payload = {}
     end
+
+    # @return [String] parser locale
+    attr_reader :locale
 
     # Parse error message
     # @return (see #to_a)
@@ -50,7 +95,7 @@ class ErrorNormalizer
       parse_list_message
       return to_a if @key
 
-      @key = to_key(@message)
+      @key = normalize_message(@message)
       to_a
     end
 
@@ -62,30 +107,31 @@ class ErrorNormalizer
     private
 
     def parse_value_message
-      VALUE_MATCHERS.each do |matcher|
+      self.class.value_matchers.each do |(key, matcher)|
         data = matcher.match(@message)
         next if data.nil?
 
-        @key = to_key(data[:err])
-        @payload[:value] = data[:val]
+        @key = key
+        @payload[:value] = data[:val] if data.names.include?('val')
 
         break
       end
     end
 
     def parse_list_message
-      LIST_MATCHERS.each do |matcher|
+      self.class.list_matchers.each do |(key, matcher)|
         data = matcher.match(@message)
         next if data.nil?
 
-        @key = to_key(data[:err])
-        @payload.merge!(parse_list_payload(data[:val]))
+        @key = key
+        @payload.merge!(parse_list_payload(data[:val])) if data.names.include?('val')
 
         break
       end
     end
 
-    def to_key(msg)
+    # TODO: fine tune for UTF-8 messages
+    def normalize_message(msg)
       msg.downcase.tr(' ', '_').gsub(/[^a-z0-9_]/, '')
     end
 

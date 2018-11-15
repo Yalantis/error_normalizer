@@ -20,9 +20,11 @@ Gem::Specification.new do |spec|
   spec.require_paths = ['lib']
 
   spec.add_runtime_dependency 'dry-configurable', '~> 0.7.0'
+  spec.add_development_dependency 'i18n', '~> 1'
 
   spec.add_development_dependency 'bundler', '~> 1.16'
   spec.add_development_dependency 'dry-validation', '~> 0.12.2'
+  spec.add_development_dependency 'pry-byebug', '~> 3.6'
   spec.add_development_dependency 'rake', '~> 10.0'
   spec.add_development_dependency 'rspec', '~> 3.0'
   spec.add_development_dependency 'rubocop', '0.59.2'
