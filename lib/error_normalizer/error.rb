@@ -76,7 +76,7 @@ class ErrorNormalizer
     private
 
     def message
-      @message || @key.tr('_', ' ')
+      @message || translate_message || humanize_key
     end
 
     def payload
@@ -88,6 +88,19 @@ class ErrorNormalizer
 
       path_translation = SchemaPathTranslator.new(path).translate
       "#{path_translation} #{message}"
+    end
+
+    def translate_message
+      return unless @i18n_messages
+
+      require 'i18n' # do not load if not needed
+      path = "errors.#{@key}"
+
+      I18n.t(path) if I18n.exists?(path)
+    end
+
+    def humanize_key
+      @key.tr('_', ' ')
     end
   end
 end

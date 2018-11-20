@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    error_normalizer (0.1.1)
+    error_normalizer (0.2.0)
       dry-configurable (~> 0.7.0)
 
 GEM
