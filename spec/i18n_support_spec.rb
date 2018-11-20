@@ -91,7 +91,7 @@ RSpec.describe 'I18n support features' do
   end
 
   context 'when error message is empty but we have translation for the error key' do
-    subject { ErrorNormalizer::Error.new('no_way', type: 'custom', i18n_messages: true).to_hash }
+    subject { ErrorNormalizer::Error.new('no_way', type: 'custom').to_hash }
 
     before do
       I18n.backend.store_translations(

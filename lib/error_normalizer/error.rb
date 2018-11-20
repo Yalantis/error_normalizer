@@ -32,8 +32,9 @@ class ErrorNormalizer
       @key = error_key
       @message = message
       @type = type
-      @i18n_messages = i18n_messages
       @payload = payload
+      @i18n_messages =
+        i18n_messages.nil? ? ErrorNormalizer.config.i18n_messages : i18n_messages
     end
 
     # Case equality check
