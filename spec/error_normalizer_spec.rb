@@ -291,5 +291,33 @@ RSpec.describe ErrorNormalizer do
         }]
       end
     end
+
+    context 'with Error object as input' do
+      let(:input) { ErrorNormalizer::Error.new(:not_registered, message: 'go home') }
+
+      it 'returns normalized error' do
+        is_expected.to eq [{
+          key: :not_registered,
+          message: 'go home',
+          payload: {},
+          type: 'params'
+        }]
+      end
+    end
+
+    context 'with hash being case-equal to Error object' do
+      let(:input) do
+        Hash[key: :not_registered, message: 'no no no', payload: {}, type: 'custom']
+      end
+
+      it 'returns identical error' do
+        is_expected.to eq [{
+          key: :not_registered,
+          message: 'no no no',
+          payload: {},
+          type: 'custom'
+        }]
+      end
+    end
   end
 end

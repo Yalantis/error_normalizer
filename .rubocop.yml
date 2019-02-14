@@ -5,6 +5,9 @@ AllCops:
 
 #################### Style ###########################
 
+Style/CaseEquality:
+  Enabled: false
+
 Style/Documentation:
   Enabled: true
 

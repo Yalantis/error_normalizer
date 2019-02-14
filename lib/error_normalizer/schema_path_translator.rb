@@ -28,9 +28,9 @@ class ErrorNormalizer
     #   schemas.user.account.status.@
     #   schemas.user.account.status
     #   schemas.status.@
-    #   schemas.tatus
+    #   schemas.status
     #   status.@
-    #   tatus
+    #   status
     #
     # @return [String] translated path
     #

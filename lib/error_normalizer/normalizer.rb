@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require 'i18n'
 require_relative 'error'
 require_relative 'message_parser'
 
@@ -45,7 +46,9 @@ class ErrorNormalizer
     # Primary method to normalize the given input
     # @return [self]
     def normalize
-      if @input.is_a?(Hash)
+      if Error === @input
+        add_error(@input.dup)
+      elsif @input.is_a?(Hash)
         normalize_hash(@input.dup)
       elsif @input.respond_to?(:to_hash)
         normalize_hash(@input.to_hash)
@@ -64,9 +67,7 @@ class ErrorNormalizer
     private
 
     # TODO: support arrays of errors as input
-    def normalize_hash(input) # rubocop:disable AbcSize
-      return add_error(input) if input.is_a?(Error)
-
+    def normalize_hash(input)
       input.each do |key, value|
         if messages_ary?(value)
           options = prepare_error_options(key)
