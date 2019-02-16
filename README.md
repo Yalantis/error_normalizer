@@ -1,6 +1,6 @@
 # Hola :call_me_hand:
 
-This gem was born out of need to have a establish a single universal error format to be consumed by frontend (JS), Android and iOS clients.
+This gem was born out of the need to have an established universal error format to be consumed by frontend (JS), Android and iOS clients.
 
 ## API error format
 
@@ -20,9 +20,10 @@ In our projects we have a convention, that in case of a failed request (422) bac
 Each error object **must have** 4 required fields: `key`, `type`, `message` and `payload`.
 
 - `key` is a concise error code that will be used in a user-friendly translations
-- `type` may be `params`, `custom` or something else
+- `type` may be `params`, `custom`, `rule` or something else
   - `params` means that some parameter that the backend received was wrong
-  - `custom` covers everything else from the business validation composed from several parameters to something really special
+  - `rule` covers cases of the high-level (business) rules which validate against several fields simultaneously
+  - `custom` covers everything else
 - `message` is a "default" or "fallback" error message in plain English that may be used if client does not have translation for the error code
 - `payload` contains other useful data that assists client error handling. For example, in case of `type: "params"` we can provide a _path_ to the invalid paramter.
 
@@ -76,7 +77,7 @@ For more information about supported errors and how they would be parsed please 
 
 **TL;DR:** Add `_rule` to the [custom validation block](https://dry-rb.org/gems/dry-validation/custom-validation-blocks/) names (adding this to the [high-level rules](https://dry-rb.org/gems/dry-validation/high-level-rules/) won't harm either, praise the consistency!).
 
-**Long version**: When you're using [custom validation blocks](https://dry-rb.org/gems/dry-validation/custom-validation-blocks/) the error output is slightly diffenet. Instead of attribute name it will have a rule name as a key. For example, GIVEN this schema
+**Long version**: When you're using [custom validation blocks](https://dry-rb.org/gems/dry-validation/custom-validation-blocks/) the error output is slightly diffenet. Instead of the attribute name it will have a rule name as a key. For example, GIVEN this schema
 
     schema = Dry::Validation.Schema do
       configure do
@@ -144,7 +145,7 @@ You can customize rule name match pattern, type name or turn off this feature co
 
 ##### Full message translation
 
-This feature enables to define localization for schema attributes (think of `path` that you get in `payload`), translate it with I18n and concatenate it with the error messages.
+This feature allows to define the localization for schema attributes (think of `path` that you get in `payload`), translate it with I18n and concatenate it with the error messages.
 
     schema = Dry::Validation.Schema do
       required(:user).schema do
@@ -245,8 +246,6 @@ THEN we can normalize object errors to API error format
 ## TODO
 
 - configure Gitlab CI
-- parse ActiveModel error mesasges
-- support array of errors as an input
 
 ## License
 
