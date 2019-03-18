@@ -1,7 +1,6 @@
 # Common configuration.
 AllCops:
-  TargetRubyVersion: 2.5
-  TargetRailsVersion: 5.1
+  TargetRubyVersion: 2.0
 
 #################### Style ###########################
 
