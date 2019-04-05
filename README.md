@@ -1,3 +1,5 @@
+[![Build Status](https://jenkins.yalantis.com/buildStatus/icon?job=error_normalizer)](https://jenkins.yalantis.com/job/error_normalizer/)
+
 # Hola :call_me_hand:
 
 This gem was born out of the need to have an established universal error format to be consumed by frontend (JS), Android and iOS clients.
