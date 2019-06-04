@@ -42,7 +42,7 @@ class ErrorNormalizer
         translated_tokens << translate_token(token, i, tokens)
       end
 
-      translated_tokens.join(' ').capitalize
+      upcase_sentence(translated_tokens.join(' '))
     end
 
     private
@@ -68,6 +68,10 @@ class ErrorNormalizer
         lookup << "#{token}.@"
         lookup << token
       end
+    end
+
+    def upcase_sentence(string)
+      string.length > 0 ? string[0].upcase.concat(string[1..-1]) : ""
     end
   end
 end
