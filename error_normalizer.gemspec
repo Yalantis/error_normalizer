@@ -5,7 +5,7 @@ require_relative 'lib/error_normalizer/version'
 Gem::Specification.new do |spec|
   spec.name          = 'error_normalizer'
   spec.version       = ErrorNormalizer::VERSION
-  spec.authors       = ['Denis Kondratenko']
+  spec.authors       = ['Denis Kondratenko', 'Aleksandra Stolyar']
   spec.email         = ['di.kondratenko@gmail.com']
 
   spec.summary       = 'Normalize dry-validation and ActiveModel errors to the universal format'
