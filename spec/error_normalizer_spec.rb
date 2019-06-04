@@ -319,5 +319,34 @@ RSpec.describe ErrorNormalizer do
         }]
       end
     end
+
+    context 'with case-sensitive path translation' do
+      let(:input) { Hash[some_important_license_number: ['has already been taken']] }
+      before do
+        ErrorNormalizer.config.i18n_messages = true
+
+        I18n.backend.store_translations(
+          :en,
+          Hash[
+            schemas: {
+              some_important_license_number: {
+                '@': 'some important LISENCE number',
+              }
+            }
+          ]
+        )
+      end
+
+      it 'returns error saving uppercase' do
+        is_expected.to eq [{
+          key: 'has_already_been_taken',
+          message: 'Some important LISENCE number has already been taken',
+          payload: {
+            path: 'some_important_license_number'
+          },
+          type: 'params'
+        }]
+      end
+    end
   end
 end
