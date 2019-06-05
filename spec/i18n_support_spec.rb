@@ -27,17 +27,17 @@ RSpec.describe 'I18n support features' do
         Hash[
           schemas: {
             user: {
-              '@': 'Юзер',
-              name: 'Имя',
+              '@': 'юзер',
+              name: 'имя',
               account: {
-                '@': 'Аккаунт',
-                status: 'Статус'
+                '@': 'аккаунт',
+                status: 'статус'
               }
             }
           },
           role: {
-            '@': 'Роль',
-            name: 'Название'
+            '@': 'роль',
+            name: 'название'
           }
         ]
       )
